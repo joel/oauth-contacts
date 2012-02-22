@@ -10,7 +10,6 @@ module Oauth
         super
         @callback_url = Settings.oauth.contacts.google.callback_url
 
-        # GOOGLE
         opts = { key: Settings.oauth.contacts.google.key, secret: Settings.oauth.contacts.google.secret,
           extra: { site: 'https://accounts.google.com',
             authorize_url: '/o/oauth2/auth',
@@ -27,7 +26,6 @@ module Oauth
       def authorize_url
         scopes = Settings.oauth.contacts.google.scopes
 
-        # http://code.google.com/intl/fr-FR/apis/contacts/docs/3.0/developers_guide.html
         extra_params = { scope: scopes.join(' '),
           redirect_uri: callback_url,
           response_type: 'code',
@@ -38,28 +36,12 @@ module Oauth
         consumer.auth_code.authorize_url( extra_params )
       end
 
+      # http://code.google.com/intl/fr-FR/apis/contacts/docs/3.0/developers_guide.html
       def contacts
         token!
 
         request = "https://www.google.com/m8/feeds/contacts/default/full?alt=json"
         @contacts = normalize(access_token.get(request, :parse => :json).parsed)
-      end
-
-      class << self
-        def slim(contacts) #:nodoc:
-          _contacts = { 'contacts' => [] }
-
-          contacts['feed']['entry'].each do |contact|
-            emails, nickname = [], nil
-            nickname = contact['title']['$t']
-
-            contact['gd$email'].each do |email|
-              emails << email['address']
-            end
-            _contacts['contacts'] << { :email => emails.first, :emails => emails, :name => nickname }
-          end
-          _contacts
-        end
       end
 
       private
